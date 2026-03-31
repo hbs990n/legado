@@ -3,6 +3,7 @@ package io.legado.app.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
@@ -11,7 +12,6 @@ import io.legado.app.model.DoubaoDownloadManager
 import io.legado.app.model.ReadAloud
 import io.legado.app.model.ReadBook
 import io.legado.app.service.BaseReadAloudService
-import io.legado.app.utils.LogUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,7 +38,8 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        LogUtils.d(TAG, "收到广播: ${intent.action}")
+        Log.d(TAG, "onReceive called: action=${intent.action}")
+        AppLog.put("豆包TTS Receiver收到广播: ${intent.action}")
 
         when (intent.action) {
             ACTION_SET_URL -> handleSetUrl(context, intent)
@@ -60,8 +61,9 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
         }
         AppConfig.doubaoServerUrl = url.trimEnd('/')
         val currentUrl = AppConfig.doubaoServerUrl
+        Log.d(TAG, "URL set to: $currentUrl")
+        AppLog.put("豆包TTS地址已设置: $currentUrl")
         showToast(context, "豆包TTS地址已设置: $currentUrl")
-        LogUtils.d(TAG, "设置豆包TTS地址: $currentUrl")
     }
 
     private fun handleEnable(context: Context, intent: Intent) {
@@ -70,8 +72,9 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
         if (enabled) {
             ReadAloud.upReadAloudClass()
         }
+        Log.d(TAG, "TTS enabled: $enabled")
+        AppLog.put("豆包TTS ${if (enabled) "开启" else "关闭"}")
         showToast(context, "豆包TTS已${if (enabled) "开启" else "关闭"}")
-        LogUtils.d(TAG, "豆包TTS ${if (enabled) "开启" else "关闭"}")
     }
 
     private fun handleDownload(context: Context, intent: Intent) {
@@ -89,7 +92,6 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
             return
         }
 
-        // 验证设置
         if (!AppConfig.doubaoTtsEnabled) {
             showToast(context, "豆包TTS未开启，请先执行 DOUBAO_ENABLE")
             return
@@ -103,6 +105,7 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
             try {
                 val book = appDb.bookDao.getBook(bookName, bookAuthor)
                 if (book == null) {
+                    Log.e(TAG, "Book not found: $bookName / $bookAuthor")
                     AppLog.put("豆包TTS: 未找到书籍 $bookName / $bookAuthor")
                     showToast(context, "未找到书籍: $bookName ($bookAuthor)")
                     return@launch
@@ -118,10 +121,9 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
                 }
 
                 val indices = (start..end).toList()
-                LogUtils.d(TAG, "开始下载: ${book.name}, 章节 $start..$end (共${indices.size}章)")
+                Log.d(TAG, "Download: ${book.name}, chapters $start..$end (${indices.size} total)")
                 AppLog.put("豆包TTS: 开始下载 ${book.name} 章节 $start..$end")
 
-                // 过滤已下载的
                 val toDownload = indices.filter { !DoubaoDownloadManager.isChapterDownloaded(book, it) }
                 if (toDownload.isEmpty()) {
                     showToast(context, "所有指定章节已下载")
@@ -132,6 +134,7 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
                 DoubaoDownloadManager.enqueue(book, toDownload)
 
             } catch (e: Exception) {
+                Log.e(TAG, "Download error", e)
                 AppLog.put("豆包TTS下载异常: ${e.localizedMessage}", e)
                 showToast(context, "下载异常: ${e.localizedMessage}")
             }
@@ -147,7 +150,6 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
             sb.append("  下载中: ${DoubaoDownloadManager.isWorking.value}\n")
             sb.append("  队列: ${DoubaoDownloadManager.downloadQueue.value.size}章\n")
 
-            // 当前打开的书
             val book = ReadBook.book
             if (book != null) {
                 val downloaded = DoubaoDownloadManager.getDownloadedChapters(book)
@@ -159,7 +161,8 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
             }
 
             val msg = sb.toString()
-            LogUtils.d(TAG, msg)
+            Log.d(TAG, msg)
+            AppLog.put(msg)
             showToast(context, msg, Toast.LENGTH_LONG)
         }
     }
@@ -207,6 +210,7 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
     }
 
     private fun showToast(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
+        Log.d(TAG, "Toast: $message")
         android.os.Handler(android.os.Looper.getMainLooper()).post {
             Toast.makeText(context, message, duration).show()
         }
