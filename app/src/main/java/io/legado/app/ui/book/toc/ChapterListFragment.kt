@@ -18,8 +18,10 @@ import io.legado.app.databinding.FragmentChapterListBinding
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.simulatedTotalChapterNum
+import io.legado.app.help.config.AppConfig
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.model.DoubaoDownloadManager
 import io.legado.app.ui.widget.recycler.UpLinearLayoutManager
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.ColorUtils
@@ -75,6 +77,13 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
         tvCurrentChapterInfo.setOnClickListener {
             mLayoutManager.scrollToPositionWithOffset(durChapterIndex, 0)
         }
+        // 豆包TTS下载按钮
+        ivDoubaoDownload.setOnClickListener {
+            toggleDoubaoSelectMode()
+        }
+        tvDoubaoDownload.setOnClickListener {
+            startDoubaoDownload()
+        }
         binding.llChapterBaseInfo.applyNavigationBarPadding()
     }
 
@@ -86,6 +95,15 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
             binding.tvCurrentChapterInfo.text =
                 "${book.durChapterTitle}(${book.durChapterIndex + 1}/${book.simulatedTotalChapterNum()})"
             initCacheFileNames(book)
+            // 豆包TTS: 显示/隐藏下载按钮，加载已下载状态
+            if (AppConfig.doubaoTtsEnabled) {
+                binding.ivDoubaoDownload.visible()
+                binding.tvDoubaoDownload.visible()
+                loadDoubaoDownloadedState(book)
+            } else {
+                binding.ivDoubaoDownload.gone()
+                binding.tvDoubaoDownload.gone()
+            }
         }
     }
 
@@ -179,6 +197,84 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
                     .putExtra("chapterChanged", bookChapter.index != durChapterIndex)
             )
             finish()
+        }
+    }
+
+    // ==================== 豆包TTS下载功能 ====================
+
+    private fun loadDoubaoDownloadedState(book: Book) {
+        lifecycleScope.launch(IO) {
+            val downloaded = DoubaoDownloadManager.getDownloadedChapters(book)
+            withContext(Main) {
+                adapter.doubaoDownloadedIndices.clear()
+                adapter.doubaoDownloadedIndices.addAll(downloaded)
+                adapter.notifyItemRangeChanged(0, adapter.itemCount)
+            }
+        }
+    }
+
+    private fun toggleDoubaoSelectMode() {
+        adapter.doubaoSelectMode = !adapter.doubaoSelectMode
+        if (!adapter.doubaoSelectMode) {
+            adapter.doubaoSelectedIndices.clear()
+            binding.tvDoubaoDownload.text = "下载"
+        }
+        adapter.notifyItemRangeChanged(0, adapter.itemCount)
+    }
+
+    override fun onDoubaoSelectionChanged(selectedCount: Int) {
+        if (selectedCount > 0) {
+            binding.tvDoubaoDownload.text = "下载($selectedCount)"
+        } else {
+            binding.tvDoubaoDownload.text = "下载"
+        }
+    }
+
+    private fun startDoubaoDownload() {
+        val book = book ?: return
+        val selected = adapter.doubaoSelectedIndices.toList()
+        if (selected.isEmpty()) {
+            io.legado.app.utils.toastOnUi("请先勾选要下载的章节")
+            return
+        }
+        // 过滤掉已下载的
+        val toDownload = selected.filter { !adapter.doubaoDownloadedIndices.contains(it) }
+        if (toDownload.isEmpty()) {
+            io.legado.app.utils.toastOnUi("所选章节已全部下载")
+            return
+        }
+        adapter.doubaoSelectMode = false
+        adapter.doubaoSelectedIndices.clear()
+        binding.tvDoubaoDownload.text = "下载"
+        adapter.notifyItemRangeChanged(0, adapter.itemCount)
+        // 启动下载
+        DoubaoDownloadManager.enqueue(book, toDownload)
+        io.legado.app.utils.toastOnUi("已加入下载队列，共${toDownload.size}章")
+        // 监听下载进度
+        observeDoubaoDownloadProgress(book)
+    }
+
+    private fun observeDoubaoDownloadProgress(book: Book) {
+        lifecycleScope.launch {
+            DoubaoDownloadManager.progressEvent.collect { progress ->
+                when {
+                    progress.percent == 100 -> {
+                        // 下载完成，更新UI
+                        adapter.doubaoDownloadedIndices.add(progress.chapterIndex)
+                        withContext(Main) {
+                            adapter.notifyItemRangeChanged(0, adapter.itemCount)
+                        }
+                    }
+                    progress.percent == -1 -> {
+                        // 失败，可以在这里提示
+                        withContext(Main) {
+                            io.legado.app.utils.toastOnUi(
+                                "第${progress.chapterIndex + 1}章下载失败: ${progress.message}"
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 

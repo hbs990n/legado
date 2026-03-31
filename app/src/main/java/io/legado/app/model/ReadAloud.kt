@@ -10,6 +10,7 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.HttpTTS
 import io.legado.app.help.config.AppConfig
 import io.legado.app.service.BaseReadAloudService
+import io.legado.app.service.DoubaoAudioService
 import io.legado.app.service.HttpReadAloudService
 import io.legado.app.service.TTSReadAloudService
 import io.legado.app.utils.LogUtils
@@ -26,6 +27,10 @@ object ReadAloud {
 
     private fun getReadAloudClass(): Class<*> {
         val ttsEngine = ttsEngine
+        // 豆包TTS: 优先检查是否启用豆包TTS模式
+        if (AppConfig.doubaoTtsEnabled) {
+            return DoubaoAudioService::class.java
+        }
         if (ttsEngine.isNullOrBlank()) {
             return TTSReadAloudService::class.java
         }

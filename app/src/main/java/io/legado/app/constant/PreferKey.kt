@@ -31,6 +31,8 @@ object PreferKey {
     const val ttsEngine = "appTtsEngine"
     const val ttsFollowSys = "ttsFollowSys"
     const val ttsSpeechRate = "ttsSpeechRate"
+    const val doubaoServerUrl = "doubaoServerUrl"
+    const val doubaoTtsEnabled = "doubaoTtsEnabled"
     const val prevKeys = "prevKeyCodes"
     const val nextKeys = "nextKeyCodes"
     const val showDiscovery = "showDiscovery"

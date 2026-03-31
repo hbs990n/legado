@@ -125,6 +125,10 @@ class ReadAloudConfigDialog : BasePrefDialogFragment() {
                         it.isEnabled = AppConfig.ignoreAudioFocus
                     }
                 }
+
+                PreferKey.doubaoTtsEnabled -> {
+                    ReadAloud.upReadAloudClass()
+                }
             }
         }
 

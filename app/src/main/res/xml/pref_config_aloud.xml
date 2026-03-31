@@ -69,4 +69,24 @@
 
     </io.legado.app.lib.prefs.PreferenceCategory>
 
+    <io.legado.app.lib.prefs.PreferenceCategory
+        android:title="豆包TTS"
+        app:iconSpaceReserved="false">
+
+        <io.legado.app.lib.prefs.SwitchPreference
+            android:defaultValue="false"
+            android:title="启用豆包TTS"
+            android:summary="启用后朗读引擎将使用豆包TTS，优先于其他TTS设置"
+            android:key="doubaoTtsEnabled"
+            app:iconSpaceReserved="false" />
+
+        <io.legado.app.lib.prefs.EditTextPreference
+            android:title="服务地址"
+            android:summary="豆包TTS服务端地址，如 http://192.168.0.103:9527"
+            android:key="doubaoServerUrl"
+            android:dialogTitle="豆包TTS服务地址"
+            app:iconSpaceReserved="false" />
+
+    </io.legado.app.lib.prefs.PreferenceCategory>
+
 </androidx.preference.PreferenceScreen>

@@ -371,6 +371,18 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             appCtx.putPrefString(PreferKey.ttsEngine, value)
         }
 
+    var doubaoServerUrl: String
+        get() = appCtx.getPrefString(PreferKey.doubaoServerUrl, "")
+        set(value) {
+            appCtx.putPrefString(PreferKey.doubaoServerUrl, value)
+        }
+
+    var doubaoTtsEnabled: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.doubaoTtsEnabled, false)
+        set(value) {
+            appCtx.putPrefBoolean(PreferKey.doubaoTtsEnabled, value)
+        }
+
     var webPort: Int
         get() = appCtx.getPrefInt(PreferKey.webPort, 1122)
         set(value) {

@@ -16,6 +16,7 @@ import io.legado.app.help.config.AppConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.lib.theme.ThemeUtils
 import io.legado.app.lib.theme.accentColor
+import io.legado.app.model.DoubaoDownloadManager
 import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.gone
 import io.legado.app.utils.longToastOnUi
@@ -31,6 +32,12 @@ class ChapterListAdapter(context: Context, val callback: Callback) :
     val cacheFileNames = hashSetOf<String>()
     private val displayTitleMap = ConcurrentHashMap<String, String>()
     private val handler = Handler(Looper.getMainLooper())
+
+    /** 豆包TTS多选模式 */
+    var doubaoSelectMode = false
+    val doubaoSelectedIndices = hashSetOf<Int>()
+    /** 豆包TTS已下载章节索引集合 */
+    var doubaoDownloadedIndices = hashSetOf<Int>()
 
     override val diffItemCallback: DiffUtil.ItemCallback<BookChapter>
         get() = object : DiffUtil.ItemCallback<BookChapter>() {
@@ -170,13 +177,45 @@ class ChapterListAdapter(context: Context, val callback: Callback) :
                 tvChapterName.text = getDisplayTitle(item)
                 upHasCache(binding, isDur, cached)
             }
+
+            // 豆包TTS状态显示
+            if (AppConfig.doubaoTtsEnabled) {
+                val isDownloaded = doubaoDownloadedIndices.contains(item.index)
+                val isSelected = doubaoSelectedIndices.contains(item.index)
+                if (isDownloaded) {
+                    binding.ivChecked.setImageResource(R.drawable.ic_volume_up)
+                    binding.ivChecked.visible()
+                    binding.ivChecked.setColorFilter(context.accentColor)
+                } else if (doubaoSelectMode) {
+                    binding.ivChecked.setImageResource(
+                        if (isSelected) R.drawable.ic_check
+                        else R.drawable.ic_outline_cloud_24
+                    )
+                    binding.ivChecked.visible()
+                    binding.ivChecked.setColorFilter(
+                        if (isSelected) context.accentColor
+                        else context.getCompatColor(R.color.secondaryText)
+                    )
+                }
+            }
         }
     }
 
     override fun registerListener(holder: ItemViewHolder, binding: ItemChapterListBinding) {
         holder.itemView.setOnClickListener {
             getItem(holder.layoutPosition)?.let {
-                callback.openChapter(it)
+                if (doubaoSelectMode) {
+                    if (doubaoDownloadedIndices.contains(it.index)) return@let
+                    if (doubaoSelectedIndices.contains(it.index)) {
+                        doubaoSelectedIndices.remove(it.index)
+                    } else {
+                        doubaoSelectedIndices.add(it.index)
+                    }
+                    notifyItemChanged(holder.layoutPosition)
+                    callback.onDoubaoSelectionChanged(doubaoSelectedIndices.size)
+                } else {
+                    callback.openChapter(it)
+                }
             }
         }
         holder.itemView.setOnLongClickListener {
@@ -204,6 +243,7 @@ class ChapterListAdapter(context: Context, val callback: Callback) :
         fun openChapter(bookChapter: BookChapter)
         fun durChapterIndex(): Int
         fun onListChanged()
+        fun onDoubaoSelectionChanged(selectedCount: Int) {}
     }
 
 }
