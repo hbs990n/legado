@@ -9,6 +9,7 @@ import io.legado.app.data.appDb
 import io.legado.app.help.config.AppConfig
 import io.legado.app.model.DoubaoDownloadManager
 import io.legado.app.model.ReadAloud
+import io.legado.app.model.ReadBook
 import io.legado.app.service.BaseReadAloudService
 import io.legado.app.utils.LogUtils
 import kotlinx.coroutines.CoroutineScope
@@ -43,7 +44,7 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
             ACTION_SET_URL -> handleSetUrl(context, intent)
             ACTION_ENABLE -> handleEnable(context, intent)
             ACTION_DOWNLOAD -> handleDownload(context, intent)
-            ACTION_STATUS -> handleStatus(context, intent)
+            ACTION_STATUS -> handleStatus(context)
             ACTION_PLAY -> handlePlay(context)
             ACTION_PAUSE -> handlePause(context)
             ACTION_STOP -> handleStop(context)
@@ -147,7 +148,7 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
             sb.append("  队列: ${DoubaoDownloadManager.downloadQueue.value.size}章\n")
 
             // 当前打开的书
-            val book = io.legado.app.model.ReadBook.book
+            val book = ReadBook.book
             if (book != null) {
                 val downloaded = DoubaoDownloadManager.getDownloadedChapters(book)
                 val total = appDb.bookChapterDao.getChapterCount(book.bookUrl)
@@ -169,12 +170,12 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
             return
         }
         ReadAloud.upReadAloudClass()
-        val book = io.legado.app.model.ReadBook.book
+        val book = ReadBook.book
         if (book == null) {
             showToast(context, "当前未打开书籍")
             return
         }
-        if (!DoubaoDownloadManager.isChapterDownloaded(book, io.legado.app.model.ReadBook.durChapterIndex)) {
+        if (!DoubaoDownloadManager.isChapterDownloaded(book, ReadBook.durChapterIndex)) {
             showToast(context, "当前章节音频未下载")
             return
         }
@@ -206,7 +207,6 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
     }
 
     private fun showToast(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
-        // 切换到主线程显示Toast
         android.os.Handler(android.os.Looper.getMainLooper()).post {
             Toast.makeText(context, message, duration).show()
         }
