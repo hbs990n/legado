@@ -10,7 +10,7 @@ import io.legado.app.help.DoubaoTtsClient
 import io.legado.app.help.book.BookHelp
 import io.legado.app.utils.LogUtils
 import io.legado.app.utils.MD5Utils
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ensureActive
 import io.legado.app.utils.postEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -263,7 +263,7 @@ object DoubaoDownloadManager {
                 val wavFiles = mutableListOf<File>()
 
                 for (i in segments.indices) {
-                    if (!isActive) return
+                    ensureActive()
 
                     val segment = segments[i]
                     _progressEvent.emit(
