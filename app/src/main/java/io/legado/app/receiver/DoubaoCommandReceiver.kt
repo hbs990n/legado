@@ -3,6 +3,7 @@ package io.legado.app.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.util.Log
 import android.widget.Toast
 import io.legado.app.constant.AppLog
@@ -15,10 +16,14 @@ import io.legado.app.service.BaseReadAloudService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import splitties.init.appCtx
 
 /**
  * 豆包TTS ADB命令接收器
  * 通过 adb shell am broadcast 直接触发豆包TTS相关功能
+ *
+ * 注意: 由于 Android 8+ 限制静态注册的 BroadcastReceiver 接收隐式广播，
+ * 此 Receiver 需要在 App.onCreate() 中通过 registerReceiver() 动态注册。
  */
 class DoubaoCommandReceiver : BroadcastReceiver() {
 
@@ -35,6 +40,31 @@ class DoubaoCommandReceiver : BroadcastReceiver() {
         const val ACTION_CANCEL = "io.legado.app.DOUBAO_CANCEL"
 
         private val scope = CoroutineScope(Dispatchers.IO)
+        private var registered = false
+
+        /**
+         * 动态注册 Receiver，在 App.onCreate() 中调用
+         */
+        fun register() {
+            if (registered) return
+            try {
+                val filter = IntentFilter().apply {
+                    addAction(ACTION_SET_URL)
+                    addAction(ACTION_ENABLE)
+                    addAction(ACTION_DOWNLOAD)
+                    addAction(ACTION_STATUS)
+                    addAction(ACTION_PLAY)
+                    addAction(ACTION_PAUSE)
+                    addAction(ACTION_STOP)
+                    addAction(ACTION_CANCEL)
+                }
+                appCtx.registerReceiver(DoubaoCommandReceiver(), filter)
+                registered = true
+                Log.d(TAG, "DoubaoCommandReceiver registered dynamically")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to register receiver", e)
+            }
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {

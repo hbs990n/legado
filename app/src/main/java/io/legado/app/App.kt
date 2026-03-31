@@ -108,6 +108,8 @@ class App : Application() {
             BookHelp.clearInvalidCache()
             Backup.clearCache()
             ReadBookConfig.clearBgAndCache()
+            //注册豆包TTS广播接收器
+            io.legado.app.receiver.DoubaoCommandReceiver.register()
             ThemeConfig.clearBg()
             //初始化简繁转换引擎
             when (AppConfig.chineseConverterType) {
