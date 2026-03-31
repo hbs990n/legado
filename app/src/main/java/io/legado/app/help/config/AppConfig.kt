@@ -372,7 +372,7 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
         }
 
     var doubaoServerUrl: String
-        get() = appCtx.getPrefString(PreferKey.doubaoServerUrl, "")
+        get() = appCtx.getPrefString(PreferKey.doubaoServerUrl, "") ?: ""
         set(value) {
             appCtx.putPrefString(PreferKey.doubaoServerUrl, value)
         }

@@ -87,10 +87,10 @@ object DoubaoTtsClient {
                     .get()
                     .build()
                 okHttpClient.newCall(request).execute().use { response ->
-                    val body = response.body?.string() ?: return@withContext null
+                    val body = response.body?.string() ?: return@withTimeout null
                     val json = JSONObject(body)
                     if (json.optString("status") == "timeout") {
-                        return@withContext null
+                        return@withTimeout null
                     }
                     val fileName = json.getString("file")
                     val size = json.getLong("size")

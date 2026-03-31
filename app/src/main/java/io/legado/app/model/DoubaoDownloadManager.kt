@@ -1,6 +1,7 @@
 package io.legado.app.model
 
 import io.legado.app.constant.AppLog
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.help.DoubaoNotReadyException
@@ -9,6 +10,7 @@ import io.legado.app.help.DoubaoTtsClient
 import io.legado.app.help.book.BookHelp
 import io.legado.app.utils.LogUtils
 import io.legado.app.utils.MD5Utils
+import kotlinx.coroutines.isActive
 import io.legado.app.utils.postEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

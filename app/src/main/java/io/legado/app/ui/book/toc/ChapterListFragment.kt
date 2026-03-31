@@ -26,8 +26,11 @@ import io.legado.app.ui.widget.recycler.UpLinearLayoutManager
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.applyNavigationBarPadding
+import io.legado.app.utils.gone
 import io.legado.app.utils.observeEvent
+import io.legado.app.utils.toastOnUi
 import io.legado.app.utils.viewbindingdelegate.viewBinding
+import io.legado.app.utils.visible
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
@@ -234,13 +237,13 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
         val book = book ?: return
         val selected = adapter.doubaoSelectedIndices.toList()
         if (selected.isEmpty()) {
-            io.legado.app.utils.toastOnUi("请先勾选要下载的章节")
+            toastOnUi("请先勾选要下载的章节")
             return
         }
         // 过滤掉已下载的
         val toDownload = selected.filter { !adapter.doubaoDownloadedIndices.contains(it) }
         if (toDownload.isEmpty()) {
-            io.legado.app.utils.toastOnUi("所选章节已全部下载")
+            toastOnUi("所选章节已全部下载")
             return
         }
         adapter.doubaoSelectMode = false
@@ -249,7 +252,7 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
         adapter.notifyItemRangeChanged(0, adapter.itemCount)
         // 启动下载
         DoubaoDownloadManager.enqueue(book, toDownload)
-        io.legado.app.utils.toastOnUi("已加入下载队列，共${toDownload.size}章")
+        toastOnUi("已加入下载队列，共${toDownload.size}章")
         // 监听下载进度
         observeDoubaoDownloadProgress(book)
     }
@@ -268,7 +271,7 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
                     progress.percent == -1 -> {
                         // 失败，可以在这里提示
                         withContext(Main) {
-                            io.legado.app.utils.toastOnUi(
+                            toastOnUi(
                                 "第${progress.chapterIndex + 1}章下载失败: ${progress.message}"
                             )
                         }
