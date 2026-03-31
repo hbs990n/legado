@@ -140,3 +140,9 @@ cn.hutool.core.util.**{*;}
 # Throwable
 -keepnames class * extends java.lang.Throwable
 -keepclassmembernames,allowobfuscation class * extends java.lang.Throwable{*;}
+
+# Doubao TTS
+-keep class io.legado.app.receiver.DoubaoCommandReceiver {*;}
+-keep class io.legado.app.help.DoubaoTtsClient {*;}
+-keep class io.legado.app.help.DoubaoNotReadyException {*;}
+-keep class io.legado.app.help.DoubaoSendException {*;}
