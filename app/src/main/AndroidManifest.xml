@@ -498,6 +498,20 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".receiver.DoubaoCommandReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="io.legado.app.DOUBAO_SET_URL" />
+                <action android:name="io.legado.app.DOUBAO_ENABLE" />
+                <action android:name="io.legado.app.DOUBAO_DOWNLOAD" />
+                <action android:name="io.legado.app.DOUBAO_STATUS" />
+                <action android:name="io.legado.app.DOUBAO_PLAY" />
+                <action android:name="io.legado.app.DOUBAO_PAUSE" />
+                <action android:name="io.legado.app.DOUBAO_STOP" />
+                <action android:name="io.legado.app.DOUBAO_CANCEL" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name=".api.ReaderProvider"
