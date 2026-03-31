@@ -78,6 +78,8 @@ class App : Application() {
         applyDayNightInit(this)
         registerActivityLifecycleCallbacks(LifecycleHelp)
         defaultSharedPreferences.registerOnSharedPreferenceChangeListener(AppConfig)
+        //注册豆包TTS广播接收器(必须在主线程直接注册，不能放在协程里)
+        io.legado.app.receiver.DoubaoCommandReceiver.register()
         Coroutine.async {
             LogUtils.init(this@App)
             LogUtils.d("App", "onCreate")
@@ -108,8 +110,6 @@ class App : Application() {
             BookHelp.clearInvalidCache()
             Backup.clearCache()
             ReadBookConfig.clearBgAndCache()
-            //注册豆包TTS广播接收器
-            io.legado.app.receiver.DoubaoCommandReceiver.register()
             ThemeConfig.clearBg()
             //初始化简繁转换引擎
             when (AppConfig.chineseConverterType) {
